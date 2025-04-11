@@ -1,21 +1,27 @@
 from flask import Flask, render_template, request, redirect, url_for, session
-from models.instructor import Instructor
-from models.guia import Guia
 from flask_mail import Message, Mail
 from dotenv import load_dotenv
 import os
+from flask_mongoengine import MongoEngine  # Aquí importamos MongoEngine
+from datetime import datetime  # Aquí agregamos la importación de datetime
 
+# Inicializamos la aplicación Flask
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'your_secret_key')
 
-load_dotenv()  # Cargar las variables del archivo .env
+# Cargar las variables de entorno
+load_dotenv()
 
 # Configuración de la base de datos
 app.config['MONGODB_SETTINGS'] = {
     'db': 'guias_aprendizaje',  # Nombre de la base de datos
-    'host': os.getenv('MONGO_URI')  # URI de conexión de MongoDB Atlas desde el archivo .env
+    'host': os.getenv('MONGO_URI')  # URI de conexión de MongoDB (local o Atlas)
 }
 
+# Inicializamos MongoEngine para manejar la base de datos
+db = MongoEngine(app)
+
+# Inicializamos el correo
 mail = Mail(app)
 
 # Rutas
@@ -87,5 +93,22 @@ def home():
         return redirect(url_for('login'))
     return render_template('home.html')
 
+# Definimos los modelos de Instructor y Guia
+
+class Instructor(db.Document):
+    name = db.StringField(required=True)
+    email = db.StringField(required=True, unique=True)
+    regional = db.StringField(required=True)
+    password = db.StringField(required=True)
+
+class Guia(db.Document):
+    name = db.StringField(required=True)
+    description = db.StringField(required=True)
+    program = db.StringField(required=True)
+    pdf = db.FileField(required=True)
+    date_uploaded = db.DateTimeField(default=datetime.utcnow)  # Aquí utilizamos datetime
+    instructor = db.ReferenceField(Instructor)
+
 if __name__ == '__main__':
     app.run(debug=True)
+
