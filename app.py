@@ -2,29 +2,28 @@ from flask import Flask, render_template, request, redirect, url_for, session
 from flask_mail import Message, Mail
 from dotenv import load_dotenv
 import os
-from flask_mongoengine import MongoEngine  # Aquí importamos MongoEngine
-from datetime import datetime  # Aquí agregamos la importación de datetime
+from flask_mongoengine import MongoEngine 
+from datetime import datetime 
 
-# Inicializamos la aplicación Flask
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'your_secret_key')
 
-# Cargar las variables de entorno
+
 load_dotenv()
 
-# Configuración de la base de datos
+
 app.config['MONGODB_SETTINGS'] = {
-    'db': 'guias_aprendizaje',  # Nombre de la base de datos
-    'host': os.getenv('MONGO_URI')  # URI de conexión de MongoDB (local o Atlas)
+    'db': 'guias_aprendizaje',  
+    'host': os.getenv('MONGO_URI')  
 }
 
-# Inicializamos MongoEngine para manejar la base de datos
+
 db = MongoEngine(app)
 
-# Inicializamos el correo
+
 mail = Mail(app)
 
-# Rutas
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -49,7 +48,7 @@ def register():
         instructor = Instructor(name=name, email=email, regional=regional, password=password)
         instructor.save()
 
-        # Enviar correo al instructor
+        
         msg = Message('Bienvenido al sistema', recipients=[email])
         msg.body = f'Hola {name}, tus credenciales son: {email} - {password}'
         mail.send(msg)
@@ -93,7 +92,7 @@ def home():
         return redirect(url_for('login'))
     return render_template('home.html')
 
-# Definimos los modelos de Instructor y Guia
+
 
 class Instructor(db.Document):
     name = db.StringField(required=True)
@@ -106,7 +105,7 @@ class Guia(db.Document):
     description = db.StringField(required=True)
     program = db.StringField(required=True)
     pdf = db.FileField(required=True)
-    date_uploaded = db.DateTimeField(default=datetime.utcnow)  # Aquí utilizamos datetime
+    date_uploaded = db.DateTimeField(default=datetime.utcnow)  
     instructor = db.ReferenceField(Instructor)
 
 if __name__ == '__main__':
